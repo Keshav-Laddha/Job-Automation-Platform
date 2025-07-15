@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: bart-resume-optimizer
+    env: python
+    buildCommand: ""
+    startCommand: "python backend/server/bart_server.py"
+    plan: free
+    envVars:
+      - key: PORT
+        value: 10000

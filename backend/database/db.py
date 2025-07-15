@@ -1,0 +1,98 @@
+# File: backend/database/db.py
+# Description: Sets up the SQLite database connection and initializes tables
+
+import sqlite3
+import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+DB_PATH = BASE_DIR / "database" / "jobs.db"
+
+DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+def get_connection():
+    conn = sqlite3.connect(str(DB_PATH))
+    return conn
+
+def init_db():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(""" 
+        CREATE TABLE IF NOT EXISTS applied_jobs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            job_id INTEGER,
+            company TEXT NOT NULL,
+            title TEXT NOT NULL,
+            status TEXT DEFAULT 'applied',
+            link TEXT,
+            resume_path TEXT,  -- ✅ use resume_path consistently
+            notes TEXT,
+            hr_contact TEXT,
+            deadline TEXT,
+            applied_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(job_id) REFERENCES jobs(id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS jobs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            company TEXT NOT NULL,
+            title TEXT NOT NULL,
+            link TEXT NOT NULL,
+            matched_keyword TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS resume_feedback (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            job_id INTEGER,
+            selected_points TEXT,
+            feedback TEXT,
+            FOREIGN KEY(job_id) REFERENCES jobs(id)
+        )
+    """)
+
+    # Insert sample data if applied_jobs table is empty
+    cursor.execute("SELECT COUNT(*) FROM applied_jobs")
+    if cursor.fetchone()[0] == 0:
+        sample_data = [
+            (1, "Tech Corp", "Software Engineer", "applied", "https://example.com/job1"),
+            (2, "Web Solutions", "Frontend Developer", "interview", "https://example.com/job2"),
+            (3, "Analytics Inc", "Data Scientist", "offer", "https://example.com/job3"),
+            (4, "Cloud Systems", "Backend Developer", "rejected", "https://example.com/job4"),
+            (5, "Startup XYZ", "Full Stack Developer", "applied", "https://example.com/job5"),
+            (6, "AI Company", "Machine Learning Engineer", "interview", "https://example.com/job6")
+        ]
+        cursor.executemany(
+            "INSERT INTO applied_jobs (job_id, company, title, status, link) VALUES (?, ?, ?, ?, ?)",
+            sample_data
+        )
+        print("✅ Added sample data to applied_jobs table")
+    
+    # Also add some sample jobs data
+    cursor.execute("SELECT COUNT(*) FROM jobs")
+    if cursor.fetchone()[0] == 0:
+        jobs_data = [
+            ("Tech Corp", "Software Engineer", "https://example.com/job1", "python"),
+            ("Web Solutions", "Frontend Developer", "https://example.com/job2", "react"),
+            ("Analytics Inc", "Data Scientist", "https://example.com/job3", "machine learning"),
+            ("Cloud Systems", "Backend Developer", "https://example.com/job4", "aws"),
+            ("Startup XYZ", "Full Stack Developer", "https://example.com/job5", "javascript"),
+            ("AI Company", "Machine Learning Engineer", "https://example.com/job6", "tensorflow")
+        ]
+        cursor.executemany(
+            "INSERT INTO jobs (company, title, link, matched_keyword) VALUES (?, ?, ?, ?)",
+            jobs_data
+        )
+        print("✅ Added sample data to jobs table")
+
+    conn.commit()
+    conn.close()
+    print("✅ Database initialized successfully")
+
+if __name__ == "__main__":
+    init_db()

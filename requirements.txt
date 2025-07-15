@@ -1,0 +1,15 @@
+selenium
+beautifulsoup4
+undetected-chromedriver
+sqlite3
+openai
+python-dotenv
+flask
+flask_cors
+fastapi
+uvicorn
+transformers
+torch
+smtplib
+email-validator
+pandas

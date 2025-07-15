@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BART Resume Optimizer</title>
+</head>
+<body>
+    <h2>Optimize Resume Point</h2>
+    <form id="optimizeForm">
+        <label>Job Title:</label><br>
+        <input type="text" id="jobTitle" name="jobTitle" style="width: 80%;"><br><br>
+
+        <label>Resume Point:</label><br>
+        <textarea id="resumePoint" rows="5" style="width: 80%;"></textarea><br><br>
+
+        <button type="submit">Get Suggestions</button>
+    </form>
+
+    <h3>Suggestions:</h3>
+    <ul id="suggestionsList"></ul>
+
+    <script>
+        document.getElementById("optimizeForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            const resumePoint = document.getElementById("resumePoint").value;
+            const jobTitle = document.getElementById("jobTitle").value;
+
+            const res = await fetch("/optimize", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ resume_point: resumePoint, job_title: jobTitle })
+            });
+
+            const data = await res.json();
+            const list = document.getElementById("suggestionsList");
+            list.innerHTML = "";
+            if (data.optimized_points) {
+                data.optimized_points.forEach(p => {
+                    const li = document.createElement("li");
+                    li.innerText = p;
+                    list.appendChild(li);
+                });
+            }
+        });
+
+        // Prefill job title from URL if present
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("job_title")) {
+            document.getElementById("jobTitle").value = params.get("job_title");
+        }
+    </script>
+</body>
+</html>
