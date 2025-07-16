@@ -184,3 +184,24 @@ This project is licensed under the [MIT License](LICENSE).
 ## 🌟 Show Your Support
 
 If you found this project helpful, please ⭐ star the repository and share it with others!
+
+## Ethical Use Policy
+
+This project is designed with the highest standards of ethical and legal compliance for web scraping. By using this project, you agree to the following:
+
+- **robots.txt Compliance:** The scraper checks and respects each site's robots.txt, including Disallow and Crawl-delay directives. If scraping is disallowed, the site is skipped.
+- **User-Agent Disclosure:** All requests use a clear, honest User-Agent string identifying this bot and providing contact information.
+- **Delays:** There is a random delay (3–5 seconds) between each job listing/page and a random or crawl-delay (8–15 seconds or as specified) between companies.
+- **Daily Cap:** No more than 100 companies are scraped per 24 hours, regardless of uploads or sessions.
+- **Upload Limits:** Only 20 companies per Excel upload, and only one upload per hour.
+- **Logging:** All requests, errors, and scraping activity are logged for transparency and review.
+- **Captcha Detection:** If a captcha or anti-bot challenge is detected, scraping for that company stops immediately.
+- **Automatic Pause:** If a 429/403/503 error is detected, all scraping is paused for 6 hours to avoid further issues.
+- **No Bypassing Protections:** The project does not use proxies, VPNs, or any method to bypass anti-bot measures or authentication.
+- **Data Deletion on Request:** Any company or site owner may request deletion of their data by contacting the maintainer. All job records and logs for that company will be deleted promptly.
+- **Log Monitoring:** The maintainer is responsible for regularly monitoring logs for errors or complaints and responding promptly.
+- **No Commercial Use:** This project is for personal, research, or educational use only. Do not use scraped data for commercial purposes without explicit permission from the data owner.
+
+If you are a site owner and wish to have your data removed, or have any concerns, please contact the maintainer at [your-email@example.com].
+
+**By using this project, you agree to follow all applicable laws, terms of service, and ethical guidelines.**

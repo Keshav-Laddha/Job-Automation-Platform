@@ -13,6 +13,16 @@ ALLOWED_EXTENSIONS = {"pdf", "docx"}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def parse_reminder(val):
+    if isinstance(val, bool):
+        return int(val)
+    if isinstance(val, int):
+        return val
+    if isinstance(val, str):
+        if val.lower() in ("true", "1"): return 1
+        if val.lower() in ("false", "0", ""): return 0
+    return 0
+
 @applied_jobs_bp.route("/applied/<int:job_id>/upload_resume", methods=["POST"])
 def upload_resume(job_id):
     if "resume" not in request.files:
@@ -50,6 +60,62 @@ def get_applied():
     jobs = [dict(zip([column[0] for column in cursor.description], row)) for row in cursor.fetchall()]
     conn.close()
     return jsonify(jobs)
+
+@applied_jobs_bp.route("/applied", methods=["POST"])
+def add_applied_job():
+    # Accept both JSON and multipart/form-data
+    if request.content_type and request.content_type.startswith("multipart/form-data"):
+        form = request.form
+        files = request.files
+        resume_file = files.get("resume")
+    else:
+        form = request.json or {}
+        resume_file = None
+
+    company = form.get("company")
+    title = form.get("title")
+    link = form.get("link")
+    status = form.get("status", "Applied")
+    hr_contact = form.get("hr_contact", "")
+    follow_up_date = form.get("follow_up_date", "")
+    reminder = parse_reminder(form.get("reminder", 0))
+    applied_at = form.get("applied_at", "")
+    deadline = form.get("deadline", "")
+    notes = form.get("notes", "")
+    ctc = form.get("ctc", "")
+    resume_path = ""
+
+    # Save resume file if present
+    if resume_file and resume_file.filename:
+        if not allowed_file(resume_file.filename):
+            return jsonify(error="Only PDF/DOCX allowed for resume"), 400
+        filename = secure_filename(f"manual_{company}_{title}_{resume_file.filename}")
+        save_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
+        resume_file.save(save_path)
+        resume_path = filename
+
+    # Check required fields
+    if not company or not title:
+        return jsonify(error="Missing required fields (company, title)"), 400
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO applied_jobs (company, title, link, status, hr_contact, follow_up_date, reminder, applied_at, deadline, resume_path, notes, ctc)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (company, title, link or '', status, hr_contact, follow_up_date, reminder, applied_at, deadline, resume_path, notes, ctc))
+        conn.commit()
+        job_id = cursor.lastrowid
+        cursor.execute("SELECT * FROM applied_jobs WHERE id = ?", (job_id,))
+        job = dict(zip([column[0] for column in cursor.description], cursor.fetchone()))
+    except Exception as e:
+        print("[ERROR] Failed to insert applied job (manual):", e)
+        return jsonify(error=f"Database error: {e}"), 500
+    finally:
+        conn.close()
+
+    return jsonify(success=True, job=job)
 
 @applied_jobs_bp.route("/applied/<int:job_id>", methods=["PATCH"])
 def update_applied(job_id):
@@ -126,33 +192,50 @@ def serve_uploaded_file(filename):
 # --- Interview Questions Endpoints ---
 @applied_jobs_bp.route("/interview_questions", methods=["GET"])
 def get_interview_questions():
+    job_id = request.args.get("job_id")
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, question, company, ctc_offered, asked_at FROM interview_questions ORDER BY asked_at DESC")
-    rows = cursor.fetchall()
-    conn.close()
-
-    # Group by question (case-insensitive, trimmed)
-    questions_dict = {}
-    for row in rows:
-        q_text = row[1].strip().lower()
-        if q_text not in questions_dict:
-            questions_dict[q_text] = {
+    if job_id:
+        cursor.execute("SELECT id, question, company, ctc_offered, asked_at, description, link FROM interview_questions WHERE job_id = ? ORDER BY asked_at DESC", (job_id,))
+        rows = cursor.fetchall()
+        conn.close()
+        questions = []
+        for row in rows:
+            questions.append({
                 "id": row[0],
-                "question": row[1].strip(),
-                "description": row[1].strip(),  # For now, use question as description
-                "companies": [row[2]],
-                "ctc_offered": [row[3]] if row[3] else [],
-                "asked_at": [row[4]]
-            }
-        else:
-            if row[2] not in questions_dict[q_text]["companies"]:
-                questions_dict[q_text]["companies"].append(row[2])
-            if row[3] and row[3] not in questions_dict[q_text]["ctc_offered"]:
-                questions_dict[q_text]["ctc_offered"].append(row[3])
-            questions_dict[q_text]["asked_at"].append(row[4])
-    # Return as a list
-    return jsonify(list(questions_dict.values()))
+                "question": row[1],
+                "company": row[2],
+                "ctc_offered": row[3],
+                "asked_at": row[4],
+                "description": row[5],
+                "link": row[6],
+            })
+        return jsonify(questions)
+    else:
+        cursor.execute("SELECT id, question, company, ctc_offered, asked_at, description, link FROM interview_questions ORDER BY asked_at DESC")
+        rows = cursor.fetchall()
+        conn.close()
+        # Deduplicate by lowercased/trimmed question, aggregate companies
+        questions_dict = {}
+        for row in rows:
+            q_text = row[1].strip().lower()
+            if q_text not in questions_dict:
+                questions_dict[q_text] = {
+                    "id": row[0],
+                    "question": row[1].strip(),
+                    "description": row[5],
+                    "link": row[6],
+                    "companies": [row[2]],
+                    "ctc_offered": [row[3]] if row[3] else [],
+                    "asked_at": [row[4]],
+                }
+            else:
+                if row[2] not in questions_dict[q_text]["companies"]:
+                    questions_dict[q_text]["companies"].append(row[2])
+                if row[3] and row[3] not in questions_dict[q_text]["ctc_offered"]:
+                    questions_dict[q_text]["ctc_offered"].append(row[3])
+                questions_dict[q_text]["asked_at"].append(row[4])
+        return jsonify(list(questions_dict.values()))
 
 @applied_jobs_bp.route("/interview_questions", methods=["POST"])
 def add_interview_question():
@@ -162,6 +245,7 @@ def add_interview_question():
     question = data.get("question")
     ctc_offered = data.get("ctc_offered", "")
     description = data.get("description", question)  # For future extensibility
+    link = data.get("link", "")
     if not question or not company:
         return jsonify({"success": False, "message": "Missing question or company."}), 400
     conn = get_connection()
@@ -175,8 +259,8 @@ def add_interview_question():
         return jsonify({"success": False, "message": "Question already exists for this company."}), 200
     # Otherwise, insert new row
     cursor.execute(
-        "INSERT INTO interview_questions (job_id, company, question, ctc_offered) VALUES (?, ?, ?, ?)",
-        (job_id, company, question.strip(), ctc_offered)
+        "INSERT INTO interview_questions (job_id, company, question, ctc_offered, description, link) VALUES (?, ?, ?, ?, ?, ?)",
+        (job_id, company, question.strip(), ctc_offered, description, link)
     )
     conn.commit()
     conn.close()

@@ -71,22 +71,20 @@ def init_db():
         )
     """)
 
+    # --- MIGRATION: Add 'link' column to interview_questions if not exists ---
+    cursor.execute("PRAGMA table_info(interview_questions)")
+    columns = [row[1] for row in cursor.fetchall()]
+    if 'link' not in columns:
+        cursor.execute("ALTER TABLE interview_questions ADD COLUMN link TEXT")
+        print("✅ Added 'link' column to interview_questions table")
+    # --- MIGRATION: Add 'description' column to interview_questions if not exists ---
+    cursor.execute("PRAGMA table_info(interview_questions)")
+    columns = [row[1] for row in cursor.fetchall()]
+    if 'description' not in columns:
+        cursor.execute("ALTER TABLE interview_questions ADD COLUMN description TEXT")
+        print("✅ Added 'description' column to interview_questions table")
+
     # Insert sample data if applied_jobs table is empty
-    cursor.execute("SELECT COUNT(*) FROM applied_jobs")
-    if cursor.fetchone()[0] == 0:
-        sample_data = [
-            (1, "Tech Corp", "Software Engineer", "applied", "https://example.com/job1"),
-            (2, "Web Solutions", "Frontend Developer", "interview", "https://example.com/job2"),
-            (3, "Analytics Inc", "Data Scientist", "offer", "https://example.com/job3"),
-            (4, "Cloud Systems", "Backend Developer", "rejected", "https://example.com/job4"),
-            (5, "Startup XYZ", "Full Stack Developer", "applied", "https://example.com/job5"),
-            (6, "AI Company", "Machine Learning Engineer", "interview", "https://example.com/job6")
-        ]
-        cursor.executemany(
-            "INSERT INTO applied_jobs (job_id, company, title, status, link) VALUES (?, ?, ?, ?, ?)",
-            sample_data
-        )
-        print("✅ Added sample data to applied_jobs table")
     
     # Also add some sample jobs data
     cursor.execute("SELECT COUNT(*) FROM jobs")

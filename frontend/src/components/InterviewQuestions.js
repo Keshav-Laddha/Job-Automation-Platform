@@ -7,6 +7,7 @@ const InterviewQuestions = ({ jobId, company }) => {
   const [loading, setLoading] = useState(true);
   const [newQuestion, setNewQuestion] = useState("");
   const [newDescription, setNewDescription] = useState("");
+  const [newLink, setNewLink] = useState("");
   const [showModal, setShowModal] = useState(false);
   const toast = useToast();
 
@@ -18,8 +19,11 @@ const InterviewQuestions = ({ jobId, company }) => {
   const fetchQuestions = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/interview_questions?job_id=${jobId}`);
-      setQuestions(res.data);
+      const url = jobId
+        ? `${process.env.REACT_APP_API_URL}/interview_questions?job_id=${jobId}`
+        : `${process.env.REACT_APP_API_URL}/interview_questions`;
+      const res = await axios.get(url);
+      setQuestions(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       setQuestions([]);
     } finally {
@@ -35,10 +39,12 @@ const InterviewQuestions = ({ jobId, company }) => {
         job_id: jobId,
         company,
         question: newQuestion,
-        description: newDescription
+        description: newDescription,
+        link: newLink,
       });
       setNewQuestion("");
       setNewDescription("");
+      setNewLink("");
       setShowModal(false);
       fetchQuestions();
       toast.showToast("Question added!", "success");
@@ -57,6 +63,9 @@ const InterviewQuestions = ({ jobId, company }) => {
     }
   };
 
+  // For Interview Questions page, show expand/collapse. For tracker, show all details always.
+  const isTracker = !!jobId;
+
   return (
     <div className="bg-gray-50 rounded p-4 border mt-2">
       <div className="flex justify-between items-center mb-2">
@@ -74,21 +83,45 @@ const InterviewQuestions = ({ jobId, company }) => {
         <div className="text-gray-400 text-sm">No questions yet.</div>
       ) : (
         <ul className="divide-y divide-gray-200">
-          {questions.map(q => (
-            <li key={q.id} className="py-2 flex justify-between items-center">
-              <div>
-                <span className="font-medium text-gray-800">{q.question}</span>
-                {q.description && (
-                  <span className="ml-2 text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">Desc: {q.description}</span>
-                )}
-                <span className="ml-2 text-xs text-gray-500">{q.asked_at ? new Date(q.asked_at).toLocaleDateString() : ""}</span>
+          {questions.map((q, idx) => (
+            <li key={q.id} className="flex items-start gap-3 py-2">
+              {/* Link button always visible on left if present */}
+              {q.link && (
+                <a
+                  href={q.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-shrink-0 mt-1 mr-2 bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-semibold hover:bg-blue-200 transition flex items-center gap-1"
+                  title="View Question Link"
+                >
+                  <span role="img" aria-label="link">🔗</span> Link
+                </a>
+              )}
+              <div className="flex-1">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-gray-800">{q.question}</span>
+                  {/* Delete button only in tracker mode */}
+                  {isTracker && (
+                    <button
+                      onClick={() => deleteQuestion(q.id)}
+                      className="text-red-500 hover:text-red-700 text-xs ml-2"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+                {/* Tracker: always show details. Interview Questions page: show details if expanded. */}
+                {isTracker ? (
+                  <div className="mt-1 flex flex-wrap gap-2 items-center">
+                    {q.description && (
+                      <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">Desc: {q.description}</span>
+                    )}
+                    {q.asked_at && (
+                      <span className="text-xs text-gray-500">{q.asked_at ? new Date(q.asked_at).toLocaleDateString() : ""}</span>
+                    )}
+                  </div>
+                ) : null}
               </div>
-              <button
-                onClick={() => deleteQuestion(q.id)}
-                className="text-red-500 hover:text-red-700 text-xs"
-              >
-                Delete
-              </button>
             </li>
           ))}
         </ul>
@@ -112,6 +145,13 @@ const InterviewQuestions = ({ jobId, company }) => {
                 placeholder="Description (optional)"
                 value={newDescription}
                 onChange={e => setNewDescription(e.target.value)}
+                className="border rounded px-2 py-1"
+              />
+              <input
+                type="url"
+                placeholder="Link to question (optional)"
+                value={newLink}
+                onChange={e => setNewLink(e.target.value)}
                 className="border rounded px-2 py-1"
               />
               <div className="flex gap-2 mt-2">

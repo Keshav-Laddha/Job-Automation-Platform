@@ -3,6 +3,11 @@ import axios from "axios";
 import InterviewQuestions from "../components/InterviewQuestions"; // (to be created)
 import { useToast } from "../components/Toast";
 
+// Utility to normalize strings for search (case, dot, and space insensitive)
+function normalizeString(str) {
+  return (str || "").toLowerCase().replace(/\s+/g, "").replace(/\./g, "");
+}
+
 const AppliedJobs = () => {
   const [appliedJobs, setAppliedJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -79,12 +84,17 @@ const AppliedJobs = () => {
   // Filtering and sorting logic
   const filteredJobs = useMemo(() => {
     let jobs = [...appliedJobs];
+    // Filter out known dummy jobs
+    const dummyCompanies = [
+      "Tech Corp", "Web Solutions", "Analytics Inc", "Cloud Systems", "Startup XYZ", "AI Company"
+    ];
+    jobs = jobs.filter(j => !dummyCompanies.includes(j.company));
     if (search) {
-      const s = search.toLowerCase();
+      const s = normalizeString(search);
       jobs = jobs.filter(j =>
-        (j.company && j.company.toLowerCase().includes(s)) ||
-        (j.title && j.title.toLowerCase().includes(s)) ||
-        (j.notes && j.notes.toLowerCase().includes(s))
+        (j.company && normalizeString(j.company).includes(s)) ||
+        (j.title && normalizeString(j.title).includes(s)) ||
+        (j.notes && normalizeString(j.notes).includes(s))
       );
     }
     if (statusFilter) {
@@ -95,16 +105,8 @@ const AppliedJobs = () => {
     } else if (reminderFilter === "no") {
       jobs = jobs.filter(j => !j.reminder);
     }
-    jobs.sort((a, b) => {
-      if (sortBy === "applied_at") {
-        return new Date(b.applied_at) - new Date(a.applied_at);
-      } else if (sortBy === "deadline") {
-        return new Date(a.deadline || 0) - new Date(b.deadline || 0);
-      } else if (sortBy === "follow_up_date") {
-        return new Date(a.follow_up_date || 0) - new Date(b.follow_up_date || 0);
-      }
-      return 0;
-    });
+    // Always show newest jobs at the top
+    jobs.sort((a, b) => new Date(b.applied_at) - new Date(a.applied_at));
     return jobs;
   }, [appliedJobs, search, statusFilter, reminderFilter, sortBy]);
 

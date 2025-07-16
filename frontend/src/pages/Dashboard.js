@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import JobCard from "../components/JobCard";
 import axios from "axios";
+import Modal from "../components/Modal";
 
 const Dashboard = () => {
   const [jobs, setJobs] = useState([]);
@@ -9,6 +10,22 @@ const Dashboard = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [cooldownMsg, setCooldownMsg] = useState("");
+  const [showAddJobModal, setShowAddJobModal] = useState(false);
+  const [manualJob, setManualJob] = useState({
+    company: "",
+    title: "",
+    link: "",
+    status: "Applied",
+    ctc: "",
+    notes: "",
+    hr_contact: "",
+    follow_up_date: "",
+    deadline: "",
+    reminder: false,
+    resume: null,
+    applied_at: new Date().toISOString().split("T")[0],
+  });
+  const [savingJob, setSavingJob] = useState(false);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -62,6 +79,55 @@ const Dashboard = () => {
     setUploading(false);
   };
 
+  const handleManualJobChange = (e) => {
+    const { name, value, type, checked, files } = e.target;
+    if (type === "checkbox") {
+      setManualJob((prev) => ({ ...prev, [name]: checked }));
+    } else if (type === "file") {
+      setManualJob((prev) => ({ ...prev, resume: files[0] }));
+    } else {
+      setManualJob((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleManualJobSubmit = async (e) => {
+    e.preventDefault();
+    setSavingJob(true);
+    try {
+      const formData = new FormData();
+      Object.entries(manualJob).forEach(([key, value]) => {
+        if (key === "resume" && value) {
+          formData.append("resume", value);
+        } else if (key !== "resume") {
+          formData.append(key, value);
+        }
+      });
+      await axios.post(`${process.env.REACT_APP_API_URL}/applied`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setShowAddJobModal(false);
+      setManualJob({
+        company: "",
+        title: "",
+        link: "",
+        status: "Applied",
+        ctc: "",
+        notes: "",
+        hr_contact: "",
+        follow_up_date: "",
+        deadline: "",
+        reminder: false,
+        resume: null,
+        applied_at: new Date().toISOString().split("T")[0],
+      });
+      alert("Saved successfully! See Applied Jobs.");
+    } catch (err) {
+      console.error("Failed to save job:", err, err?.response?.data);
+      alert(err?.response?.data?.error || "Failed to save job. Please try again.");
+    }
+    setSavingJob(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 py-10 px-4">
       <h1 className="text-4xl font-bold text-center text-blue-700 mb-10">🚀 AI Job Assistant</h1>
@@ -113,7 +179,7 @@ const Dashboard = () => {
           <span role="img" aria-label="delete">🗑️</span> <b>Data Deletion:</b> If a company requests data removal, contact the maintainer and all related data will be deleted promptly.
         </div>
       </div>
-      <div className="flex justify-center mb-6">
+      <div className="flex justify-center mb-6 gap-4">
         <button
           onClick={handleScrapeAndEmail}
           className={`bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 transition font-semibold ${scraping ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -121,7 +187,74 @@ const Dashboard = () => {
         >
           {scraping ? "Scraping & Emailing..." : "🔄 Scrape Jobs & Email Me"}
         </button>
+        <button
+          onClick={() => setShowAddJobModal(true)}
+          className="bg-orange-600 text-white px-6 py-2 rounded shadow hover:bg-orange-700 transition font-semibold"
+        >
+          ➕ Add Job to Job Tracker
+        </button>
       </div>
+      {showAddJobModal && (
+        <Modal onClose={() => setShowAddJobModal(false)}>
+          <h2 className="text-xl font-bold mb-4">Add Job to Job Tracker</h2>
+          <form onSubmit={handleManualJobSubmit} className="space-y-3">
+            <div>
+              <label className="block text-gray-700">Company</label>
+              <input type="text" name="company" value={manualJob.company} onChange={handleManualJobChange} className="border rounded px-3 py-1 w-full" required />
+            </div>
+            <div>
+              <label className="block text-gray-700">Title</label>
+              <input type="text" name="title" value={manualJob.title} onChange={handleManualJobChange} className="border rounded px-3 py-1 w-full" required />
+            </div>
+            <div>
+              <label className="block text-gray-700">Link</label>
+              <input type="url" name="link" value={manualJob.link} onChange={handleManualJobChange} className="border rounded px-3 py-1 w-full" />
+            </div>
+            <div>
+              <label className="block text-gray-700">Status</label>
+              <select name="status" value={manualJob.status} onChange={handleManualJobChange} className="border rounded px-3 py-1 w-full">
+                <option value="Applied">Applied</option>
+                <option value="Interview">Interview</option>
+                <option value="Rejected">Rejected</option>
+                <option value="Accepted">Accepted</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-gray-700">CTC Offered</label>
+              <input type="text" name="ctc" value={manualJob.ctc} onChange={handleManualJobChange} className="border rounded px-3 py-1 w-full" />
+            </div>
+            <div>
+              <label className="block text-gray-700">Notes</label>
+              <textarea name="notes" value={manualJob.notes} onChange={handleManualJobChange} className="border rounded px-3 py-1 w-full" rows="2" />
+            </div>
+            <div>
+              <label className="block text-gray-700">HR Contact</label>
+              <input type="text" name="hr_contact" value={manualJob.hr_contact} onChange={handleManualJobChange} className="border rounded px-3 py-1 w-full" />
+            </div>
+            <div>
+              <label className="block text-gray-700">Follow Up Date</label>
+              <input type="date" name="follow_up_date" value={manualJob.follow_up_date} onChange={handleManualJobChange} className="border rounded px-3 py-1 w-full" />
+            </div>
+            <div>
+              <label className="block text-gray-700">Last Date to Apply</label>
+              <input type="date" name="deadline" value={manualJob.deadline} onChange={handleManualJobChange} className="border rounded px-3 py-1 w-full" />
+            </div>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" name="reminder" checked={manualJob.reminder} onChange={handleManualJobChange} />
+              <label className="text-gray-700">Reminder</label>
+            </div>
+            <div>
+              <label className="block text-gray-700">Resume (optional)</label>
+              <input type="file" name="resume" accept=".pdf,.doc,.docx" onChange={handleManualJobChange} className="border rounded px-3 py-1 w-full" />
+            </div>
+            <div>
+              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition" disabled={savingJob}>
+                {savingJob ? "Saving..." : "Save Job"}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
       {jobs.map((job, idx) => (
         <JobCard key={idx} job={job} />
       ))}
