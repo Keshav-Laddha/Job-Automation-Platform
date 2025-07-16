@@ -147,16 +147,16 @@ Job Automation/
 ---
 
 ## 📸 Screenshots
-
-[Dashboard](Screenshots/Job_Dashbaord)
-[Job Tracker](Screenshots/Job_Tracker)
-[Job_Optimizer](Screenshots/Job_Optimizer)
-[Job_Analytics](Screenshots/Job_Analytics)
-[Job_Question](Screenshots/Job_Question)
-
-```
-📊 Dashboard | 📁 Tracker | 📄 Resume Optimizer
-```
+📊 Dashboard
+![Dashboard](Screenshots/Job_Dashbaord)
+📁 Tracker
+![Job Tracker](Screenshots/Job_Tracker)
+📄 Resume Optimizer
+![Job_Optimizer](Screenshots/Job_Optimizer)
+📊 Analytics
+![Job_Analytics](Screenshots/Job_Analytics)
+🎤 Questions
+![Job_Question](Screenshots/Job_Question)
 
 ---
 
