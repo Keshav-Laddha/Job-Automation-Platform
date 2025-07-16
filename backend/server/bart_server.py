@@ -7,6 +7,8 @@ from backend.database.db import init_db
 from backend.server.applied_jobs_api import applied_jobs_bp  # You need to create this blueprint
 from backend.server.job_api import job_api_bp
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
 

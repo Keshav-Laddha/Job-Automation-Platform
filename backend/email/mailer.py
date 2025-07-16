@@ -15,6 +15,12 @@ SMTP_PASS = os.getenv("SMTP_PASS")
 TO_EMAIL = os.getenv("TO_EMAIL")
 
 
+print("SMTP_HOST:", SMTP_HOST)
+print("SMTP_PORT:", SMTP_PORT)
+print("SMTP_USER:", SMTP_USER)
+print("SMTP_PASS:", SMTP_PASS)
+print("TO_EMAIL:", TO_EMAIL)
+
 def generate_prompt(job):
     return f"""You are an AI resume assistant.
 
@@ -77,6 +83,10 @@ def send_job_email(jobs):
         print("[INFO] No jobs to send.")
         return
 
+    if not all([SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, TO_EMAIL]):
+        print("[ERROR] Missing SMTP configuration. Please check your .env file.")
+        return
+
     msg = MIMEMultipart("alternative")
     msg["Subject"] = "🔔 New Internship Opportunities Found!"
     msg["From"] = SMTP_USER
@@ -88,10 +98,11 @@ def send_job_email(jobs):
     msg.attach(part2)
 
     try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASS)
-            server.sendmail(SMTP_USER, TO_EMAIL, msg.as_string())
-            print("[✓] Email sent successfully!")
+        server = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
+        server.starttls()
+        server.login(SMTP_USER, SMTP_PASS)
+        server.sendmail(SMTP_USER, TO_EMAIL, msg.as_string())
+        server.quit()
+        print("[✓] Email sent successfully!")
     except Exception as e:
         print(f"[ERROR] Failed to send email: {e}")

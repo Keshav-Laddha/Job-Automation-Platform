@@ -26,12 +26,27 @@ def init_db():
             title TEXT NOT NULL,
             status TEXT DEFAULT 'applied',
             link TEXT,
-            resume_path TEXT,  -- ✅ use resume_path consistently
+            resume_path TEXT,
             notes TEXT,
             hr_contact TEXT,
             deadline TEXT,
             applied_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            follow_up_date TEXT,
+            reminder INTEGER DEFAULT 0,
+            ctc TEXT,
             FOREIGN KEY(job_id) REFERENCES jobs(id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS interview_questions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            job_id INTEGER,
+            company TEXT,
+            question TEXT,
+            asked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            ctc_offered TEXT,
+            FOREIGN KEY(job_id) REFERENCES applied_jobs(id)
         )
     """)
 
