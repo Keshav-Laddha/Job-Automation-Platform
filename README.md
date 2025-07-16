@@ -148,15 +148,15 @@ Job Automation/
 
 ## 📸 Screenshots
 📊 Dashboard
-![Job_Dashboard](Screenshots/Job_Dashboard.png)
-📁 Tracker
-![Job Tracker](Screenshots/Job_Tracker.png)
+![Job_Dashboard](Screenshots/Job_Dashboard.pdf)
+📁 Applied Job Tracker
+![Job Tracker](Screenshots/Job_Tracker.pdf)
 📄 Resume Optimizer
 ![Job_Optimizer](Screenshots/Job_Optimizer.png)
 📊 Analytics
 ![Job_Analytics](Screenshots/Job_Analytics.png)
-🎤 Questions
-![Job_Questions](Screenshots/Job_Questions.png)
+🎤 Interview Questions
+![Job_Interview_Questions](Screenshots/Job_Interview_Questions.png)
 
 ---
 
