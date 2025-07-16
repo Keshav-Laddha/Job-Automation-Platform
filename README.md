@@ -148,8 +148,11 @@ Job Automation/
 
 ## 📸 Screenshots
 
-> Add screenshots of your Dashboard, Tracker, and Resume Optimizer here
-> Example:
+[Dashboard](Screenshots/Job_Dashbaord)
+[Job Tracker](Screenshots/Job_Tracker)
+[Job_Optimizer](Screenshots/Job_Optimizer)
+[Job_Analytics](Screenshots/Job_Analytics)
+[Job_Question](Screenshots/Job_Question)
 
 ```
 📊 Dashboard | 📁 Tracker | 📄 Resume Optimizer
