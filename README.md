@@ -148,7 +148,7 @@ Job Automation/
 
 ## 📸 Screenshots
 📊 Dashboard
-![Dashboard](Screenshots/Job_Dashbaord.png)
+![Job_Dashboard](Screenshots/Job_Dashboard.png)
 📁 Tracker
 ![Job Tracker](Screenshots/Job_Tracker.png)
 📄 Resume Optimizer
@@ -156,7 +156,7 @@ Job Automation/
 📊 Analytics
 ![Job_Analytics](Screenshots/Job_Analytics.png)
 🎤 Questions
-![Job_Question](Screenshots/Job_Question.png)
+![Job_Questions](Screenshots/Job_Questions.png)
 
 ---
 
