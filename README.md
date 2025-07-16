@@ -202,6 +202,6 @@ This project is designed with the highest standards of ethical and legal complia
 - **Log Monitoring:** The maintainer is responsible for regularly monitoring logs for errors or complaints and responding promptly.
 - **No Commercial Use:** This project is for personal, research, or educational use only. Do not use scraped data for commercial purposes without explicit permission from the data owner.
 
-If you are a site owner and wish to have your data removed, or have any concerns, please contact the maintainer at [your-email@example.com].
+If you are a site owner and wish to have your data removed, or have any concerns, please contact the maintainer at [kanuladdha03@gmail.com].
 
 **By using this project, you agree to follow all applicable laws, terms of service, and ethical guidelines.**
